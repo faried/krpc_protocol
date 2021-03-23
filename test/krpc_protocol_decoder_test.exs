@@ -2,7 +2,7 @@ defmodule KRPCProtocol.Decoder.Test do
   use ExUnit.Case, async: true
   doctest KRPCProtocol.Decoder
 
-  def node_id,   do: String.duplicate("a", 20)
+  def node_id, do: String.duplicate("a", 20)
   def info_hash, do: String.duplicate("b", 20)
 
   #####################
@@ -18,14 +18,18 @@ defmodule KRPCProtocol.Decoder.Test do
   end
 
   test "Valid message, but with an invalid node_id (> 20 bytes)" do
-    msg = <<100, 49, 58, 114, 100, 50, 58, 105, 100, 52, 48, 58, 12, 189, 73, 171, 209, 27, 51, 102, 53, 100, 99, 56, 51, 99, 100, 52, 101, 57, 51, 48, 50, 56, 56, 100, 102, 48, 99, 97, 99, 53, 98, 51, 102, 53, 100, 99, 56, 51, 102, 102, 101, 49, 58, 116, 50, 58, 181, 151, 49, 58, 121, 49, 58, 114, 101>>
+    msg =
+      <<100, 49, 58, 114, 100, 50, 58, 105, 100, 52, 48, 58, 12, 189, 73, 171, 209, 27, 51, 102,
+        53, 100, 99, 56, 51, 99, 100, 52, 101, 57, 51, 48, 50, 56, 56, 100, 102, 48, 99, 97, 99,
+        53, 98, 51, 102, 53, 100, 99, 56, 51, 102, 102, 101, 49, 58, 116, 50, 58, 181, 151, 49,
+        58, 121, 49, 58, 114, 101>>
 
     assert {:invalid, _} = KRPCProtocol.decode(msg)
   end
 
   test "Valid packet but the node id is not 160 bit long" do
     to_short = "d1:ad2:id18:aaaaaaaaaaaaaaaaaae1:q4:ping1:t2:aa1:y1:qe"
-    to_long  = "d1:ad2:id22:aaaaaaaaaaaaaaaaaaaaaa:q4:ping1:t2:aa1:y1:qe"
+    to_long = "d1:ad2:id22:aaaaaaaaaaaaaaaaaaaaaa:q4:ping1:t2:aa1:y1:qe"
 
     assert {:invalid, _} = KRPCProtocol.decode(to_short)
     assert {:invalid, _} = KRPCProtocol.decode(to_long)
@@ -37,7 +41,9 @@ defmodule KRPCProtocol.Decoder.Test do
   end
 
   test "Find Node response with an invalid byte_size of a IPv6 node" do
-    bin = "d1:rd2:id20:0123456789abcdefghij6:nodes639:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabee1:t2:aa1:y1:re"
+    bin =
+      "d1:rd2:id20:0123456789abcdefghij6:nodes639:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabee1:t2:aa1:y1:re"
+
     assert {:invalid, _} = KRPCProtocol.decode(bin)
   end
 
@@ -67,9 +73,10 @@ defmodule KRPCProtocol.Decoder.Test do
 
   test "Ping" do
     result = {:ping, %{node_id: node_id(), tid: "aa"}}
-    assert KRPCProtocol.decode("d1:ad2:id20:aaaaaaaaaaaaaaaaaaaae1:q4:ping1:t2:aa1:y1:qe") == result
-  end
 
+    assert KRPCProtocol.decode("d1:ad2:id20:aaaaaaaaaaaaaaaaaaaae1:q4:ping1:t2:aa1:y1:qe") ==
+             result
+  end
 
   ##############
   # Ping Reply #
@@ -97,19 +104,34 @@ defmodule KRPCProtocol.Decoder.Test do
   end
 
   test "Find Node Response with a IPv4 node" do
-    result = {:find_node_reply, %{node_id: "0123456789abcdefghij",
-               nodes: [{"aaaaaaaaaaaaaaaaaaaa", {{97, 97, 97, 97}, 25189}}],
-               tid: "aa", values: nil}}
+    result =
+      {:find_node_reply,
+       %{
+         node_id: "0123456789abcdefghij",
+         nodes: [{"aaaaaaaaaaaaaaaaaaaa", {{97, 97, 97, 97}, 25189}}],
+         tid: "aa",
+         values: nil
+       }}
+
     bin = "d1:rd2:id20:0123456789abcdefghij5:nodes26:aaaaaaaaaaaaaaaaaaaaaaaabee1:t2:aa1:y1:re"
     assert KRPCProtocol.decode(bin) == result
   end
 
   test "Find Node Response with a IPv6 node" do
     ipv6_addr = {24929, 24929, 24929, 24929, 24929, 24929, 24929, 24929}
-    result = {:find_node_reply, %{node_id: "0123456789abcdefghij",
-               nodes: [{"aaaaaaaaaaaaaaaaaaaa", {ipv6_addr, 25189}}],
-               tid: "aa", values: nil}}
-    bin = "d1:rd2:id20:0123456789abcdefghij6:nodes638:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabee1:t2:aa1:y1:re"
+
+    result =
+      {:find_node_reply,
+       %{
+         node_id: "0123456789abcdefghij",
+         nodes: [{"aaaaaaaaaaaaaaaaaaaa", {ipv6_addr, 25189}}],
+         tid: "aa",
+         values: nil
+       }}
+
+    bin =
+      "d1:rd2:id20:0123456789abcdefghij6:nodes638:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabee1:t2:aa1:y1:re"
+
     assert KRPCProtocol.decode(bin) == result
   end
 
@@ -129,8 +151,12 @@ defmodule KRPCProtocol.Decoder.Test do
   #################
 
   test "Announce_peer request" do
-    bin = "d1:ad2:id20:aaaaaaaaaaaaaaaaaaaa9:info_hash4:aaaa4:porti1e5:token1:ae1:q13:announce_peer1:t1:a1:y1:qe"
-    result = {:announce_peer, %{info_hash: "aaaa", node_id: node_id(), tid: "a", token: "a", port: 1}}
+    bin =
+      "d1:ad2:id20:aaaaaaaaaaaaaaaaaaaa9:info_hash4:aaaa4:porti1e5:token1:ae1:q13:announce_peer1:t1:a1:y1:qe"
+
+    result =
+      {:announce_peer, %{info_hash: "aaaa", node_id: node_id(), tid: "a", token: "a", port: 1}}
+
     assert KRPCProtocol.decode(bin) == result
 
     ## announce_peer without info_hash
@@ -138,12 +164,14 @@ defmodule KRPCProtocol.Decoder.Test do
     assert {:error, _} = KRPCProtocol.decode(bin)
 
     ## announce_peer without port
-    bin = "d1:ad2:id20:aaaaaaaaaaaaaaaaaaaa9:info_hash4:aaaa5:token1:ae1:q13:announce_peer1:t1:a1:y1:qe"
+    bin =
+      "d1:ad2:id20:aaaaaaaaaaaaaaaaaaaa9:info_hash4:aaaa5:token1:ae1:q13:announce_peer1:t1:a1:y1:qe"
+
     assert {:error, _} = KRPCProtocol.decode(bin)
 
-    bin = "d1:ad2:id20:aaaaaaaaaaaaaaaaaaaa9:info_hash4:aaaa4:porti1ee1:q13:announce_peer1:t1:a1:y1:qe"
+    bin =
+      "d1:ad2:id20:aaaaaaaaaaaaaaaaaaaa9:info_hash4:aaaa4:porti1ee1:q13:announce_peer1:t1:a1:y1:qe"
+
     assert {:error, _} = KRPCProtocol.decode(bin)
   end
-
-
 end

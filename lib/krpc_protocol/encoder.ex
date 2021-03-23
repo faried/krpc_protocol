@@ -1,5 +1,4 @@
 defmodule KRPCProtocol.Encoder do
-
   @moduledoc ~S"""
   KRPCProtocol.Encoder provides functions to encode mainline DHT messages.
   """
@@ -7,18 +6,18 @@ defmodule KRPCProtocol.Encoder do
   @typedoc """
   A node_id is a bitstring with a size of 160 bit which uniquely identifies every node.
   """
-  @type node_id :: <<_ :: 160>>
+  @type node_id :: <<_::160>>
 
   @typedoc """
   A target also belongs to the same node_id space and is a bitstring with a size of 160 bit.
   """
-  @type target :: <<_ :: 160>>
+  @type target :: <<_::160>>
 
   @typedoc """
   A transaction ID (t_id) is a bitstring with a size of 16 bit which correlates
   multiple queries to the same node.
   """
-  @type t_id :: <<_ :: 16>>
+  @type t_id :: <<_::16>>
 
   @doc ~S"""
   This function returns a bencoded Mainline DHT message.
@@ -126,12 +125,13 @@ defmodule KRPCProtocol.Encoder do
        "d1:rd2:id2:bb5:token1:b6:values6:abcd&Ee1:t2:aa1:y1:re"
 
   """
+
   #########
   # Error #
   #########
 
   def encode(:error, code: code, msg: msg, tid: tid) do
-    Bencodex.encode %{"y" => "e", "t" => tid, "e" => [code, msg]}
+    Bencodex.encode(%{"y" => "e", "t" => tid, "e" => [code, msg]})
   end
 
   ###########
@@ -139,8 +139,9 @@ defmodule KRPCProtocol.Encoder do
   ###########
 
   def encode(:ping, tid: tid, node_id: node_id) do
-    gen_dht_query "ping", tid, %{"id" => node_id}
+    gen_dht_query("ping", tid, %{"id" => node_id})
   end
+
   def encode(:ping, node_id: node_id) do
     encode(:ping, tid: gen_tid(), node_id: node_id)
   end
@@ -158,26 +159,27 @@ defmodule KRPCProtocol.Encoder do
   end
 
   def encode(:find_node, tid: tid, node_id: id, target: target, want: want) do
-    gen_dht_query "find_node", tid, %{"id" => id, "target" => target, "want" => want}
+    gen_dht_query("find_node", tid, %{"id" => id, "target" => target, "want" => want})
   end
 
-
   def encode(:get_peers, args) do
-    options = args[:node_id]
-    |> query_dict(args[:info_hash])
-    |> add_option_if_defined(:scrape, args[:scrape])
-    |> add_option_if_defined(:noseed, args[:noseed])
-    |> add_option_if_defined(:want,   args[:want])
+    options =
+      args[:node_id]
+      |> query_dict(args[:info_hash])
+      |> add_option_if_defined(:scrape, args[:scrape])
+      |> add_option_if_defined(:noseed, args[:noseed])
+      |> add_option_if_defined(:want, args[:want])
 
     gen_dht_query("get_peers", args[:tid] || gen_tid(), options)
   end
 
   def encode(:announce_peer, args) do
-    options = args[:node_id]
-    |> query_dict(args[:info_hash])
-    |> add_option_if_defined(:implied_port, args[:implied_port])
-    |> add_option_if_defined(:port, args[:port])
-    |> add_option_if_defined(:token, args[:token])
+    options =
+      args[:node_id]
+      |> query_dict(args[:info_hash])
+      |> add_option_if_defined(:implied_port, args[:implied_port])
+      |> add_option_if_defined(:port, args[:port])
+      |> add_option_if_defined(:token, args[:token])
 
     gen_dht_query("announce_peer", args[:tid] || gen_tid(), options)
   end
@@ -187,31 +189,37 @@ defmodule KRPCProtocol.Encoder do
   ###########
 
   def encode(:ping_reply, tid: tid, node_id: node_id) do
-    gen_dht_response %{"id" => node_id}, tid
+    gen_dht_response(%{"id" => node_id}, tid)
   end
 
   def encode(:find_node_reply, node_id: id, nodes: nodes, tid: tid) do
-    gen_dht_response %{"id" => id, "nodes" => compact_format(nodes)}, tid
+    gen_dht_response(%{"id" => id, "nodes" => compact_format(nodes)}, tid)
   end
 
   def encode(:find_node_reply, node_id: id, nodes6: nodes, tid: tid) do
-    gen_dht_response %{"id" => id, "nodes6" => compact_format(nodes)}, tid
+    gen_dht_response(%{"id" => id, "nodes6" => compact_format(nodes)}, tid)
   end
 
   def encode(:get_peers_reply, node_id: id, nodes: nodes, tid: tid, token: token) do
-    gen_dht_response %{
-      "id"    => id,
-      "token" => token,
-      "nodes" => compact_format(nodes)
-    }, tid
+    gen_dht_response(
+      %{
+        "id" => id,
+        "token" => token,
+        "nodes" => compact_format(nodes)
+      },
+      tid
+    )
   end
 
   def encode(:get_peers_reply, node_id: id, values: values, tid: tid, token: token) do
-    gen_dht_response %{
-      "id"     => id,
-      "token"  => token,
-      "values" => compact_format_values(values)
-    }, tid
+    gen_dht_response(
+      %{
+        "id" => id,
+        "token" => token,
+        "values" => compact_format_values(values)
+      },
+      tid
+    )
   end
 
   @doc ~S"""
@@ -220,12 +228,12 @@ defmodule KRPCProtocol.Encoder do
   """
   @spec gen_tid() :: t_id
   def gen_tid do
-    :rand.seed(:exs64, :os.timestamp)
+    :rand.seed(:exs64, :os.timestamp())
 
-    fn -> :rand.uniform 255 end
-    |> Stream.repeatedly
+    fn -> :rand.uniform(255) end
+    |> Stream.repeatedly()
     |> Enum.take(2)
-    |> :binary.list_to_bin
+    |> :binary.list_to_bin()
   end
 
   #####################
@@ -236,6 +244,7 @@ defmodule KRPCProtocol.Encoder do
   # compact format.
   defp compact_format_values(nodes), do: compact_format_values(nodes, "")
   defp compact_format_values([], result), do: result
+
   defp compact_format_values([head | tail], result) do
     {ip, port} = head
 
@@ -247,6 +256,7 @@ defmodule KRPCProtocol.Encoder do
   # in the compact format.
   defp compact_format(nodes), do: compact_format(nodes, "")
   defp compact_format([], result), do: result
+
   defp compact_format([head | tail], result) do
     {node_id, ip, port} = head
 
@@ -255,26 +265,27 @@ defmodule KRPCProtocol.Encoder do
   end
 
   defp gen_dht_query(command, tid, options) when is_map(options) do
-    Bencodex.encode %{"y" => "q", "t" => tid, "q" => command, "a" => options}
+    Bencodex.encode(%{"y" => "q", "t" => tid, "q" => command, "a" => options})
   end
 
   defp gen_dht_response(options, tid) when is_map(options) do
-    Bencodex.encode %{"y" => "r", "t" => tid, "r" => options}
+    Bencodex.encode(%{"y" => "r", "t" => tid, "r" => options})
   end
 
   # IPv4 address
   def node_to_binary({oct1, oct2, oct3, oct4}, port) do
-    <<oct1 :: 8, oct2 :: 8, oct3 :: 8, oct4 :: 8, port :: 16>>
+    <<oct1::8, oct2::8, oct3::8, oct4::8, port::16>>
   end
 
   # IPv6 address
   def node_to_binary(ip, port) when tuple_size(ip) == 8 do
-    ipstr = ip
-    |> Tuple.to_list
-    |> Enum.map(&<<_oct1 :: 8, _oct2 :: 8>> = << &1 :: 16>>)
-    |> Enum.reduce(fn(x, y) -> y <> x end)
+    ipstr =
+      ip
+      |> Tuple.to_list()
+      |> Enum.map(&(<<_oct1::8, _oct2::8>> = <<&1::16>>))
+      |> Enum.reduce(fn x, y -> y <> x end)
 
-    << ipstr :: binary, port :: 16 >>
+    <<ipstr::binary, port::16>>
   end
 
   # This function returns a bencoded mainline DHT get_peers query. It
@@ -282,13 +293,12 @@ defmodule KRPCProtocol.Encoder do
   # argument. Optional arguments are [want: "n6", scrape: true]
   defp add_option_if_defined(dict, _key, nil), do: dict
   defp add_option_if_defined(dict, key, true), do: Map.put_new(dict, to_string(key), 1)
+
   defp add_option_if_defined(dict, key, value) do
     Map.put_new(dict, to_string(key), value)
   end
 
-
   defp query_dict(id, info_hash) do
     %{"id" => id, "info_hash" => info_hash}
   end
-
 end
