@@ -131,7 +131,7 @@ defmodule KRPCProtocol.Encoder do
   #########
 
   def encode(:error, code: code, msg: msg, tid: tid) do
-    Bencodex.encode(%{"y" => "e", "t" => tid, "e" => [code, msg]})
+    ExBencode.encode!(%{"y" => "e", "t" => tid, "e" => [code, msg]})
   end
 
   ###########
@@ -265,11 +265,11 @@ defmodule KRPCProtocol.Encoder do
   end
 
   defp gen_dht_query(command, tid, options) when is_map(options) do
-    Bencodex.encode(%{"y" => "q", "t" => tid, "q" => command, "a" => options})
+    ExBencode.encode!(%{"y" => "q", "t" => tid, "q" => command, "a" => options})
   end
 
   defp gen_dht_response(options, tid) when is_map(options) do
-    Bencodex.encode(%{"y" => "r", "t" => tid, "r" => options})
+    ExBencode.encode!(%{"y" => "r", "t" => tid, "r" => options})
   end
 
   # IPv4 address

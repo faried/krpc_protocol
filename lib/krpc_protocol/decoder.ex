@@ -5,7 +5,10 @@ defmodule KRPCProtocol.Decoder do
 
   def decode(payload) when is_binary(payload) do
     try do
-      payload |> Bencodex.decode() |> check_errors |> decode
+      payload
+      |> ExBencode.decode()
+      |> check_errors()
+      |> decode()
     rescue
       error in RuntimeError -> {:invalid, error.message}
       _error in _ -> {:invalid, "Invalid becoded payload: #{inspect(payload)}"}
@@ -165,7 +168,7 @@ defmodule KRPCProtocol.Decoder do
   #####################
 
   ## This function checks for common error.
-  defp check_errors(msg) do
+  defp check_errors({:ok, msg}) do
     if Map.has_key?(msg, "a") and byte_size(msg["a"]["id"]) != 20 do
       raise "Invalid node id size: #{byte_size(msg["a"]["id"])}"
     end
@@ -184,6 +187,8 @@ defmodule KRPCProtocol.Decoder do
 
     msg
   end
+
+  defp check_errors({:error, errmsg}), do: raise(errmsg)
 
   defp has_nodes?(msg, key), do: Map.has_key?(msg, "r") and Map.has_key?(msg["r"], key)
   defp size_is_multiple_of?(map, size), do: map |> byte_size |> rem(size) != 0
